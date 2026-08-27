@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building project...'            
+                }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                echo 'Initializing Terraform...'
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Format') {
+            steps {
+                echo 'Formating Terraform...'
+                sh 'terraform fmt'
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                echo 'Validating Terraform...'
+                sh 'terraform validate'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                echo 'Planning Terraform...'
+                sh 'terraform plan'
+            }
+        }
+
+        stage('Apply') {
+            steps {
+                echo 'Provisioning infrastructure with Terraform...'
+                sh 'terraform apply'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application to EC2...'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
