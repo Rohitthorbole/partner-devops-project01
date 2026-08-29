@@ -27,7 +27,14 @@ pipeline {
                             *) echo "Unsupported architecture: $(uname -m)" >&2 ; exit 1 ;;
                         esac
                         curl -fsSLo terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${terraform_arch}.zip"
-                        unzip -oq terraform.zip -d .terraform-bin
+                        if command -v python3 >/dev/null 2>&1; then
+                            python3 -c 'import zipfile; zipfile.ZipFile("terraform.zip").extractall(".terraform-bin")'
+                        elif command -v jar >/dev/null 2>&1; then
+                            (cd .terraform-bin && jar xf ../terraform.zip)
+                        else
+                            echo 'Terraform archive extraction requires python3 or jar on the Jenkins agent.' >&2
+                            exit 1
+                        fi
                         rm terraform.zip
                     fi
                     .terraform-bin/terraform version
