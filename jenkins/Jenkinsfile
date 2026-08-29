@@ -35,6 +35,7 @@ pipeline {
                             echo 'Terraform archive extraction requires python3 or jar on the Jenkins agent.' >&2
                             exit 1
                         fi
+                        chmod +x .terraform-bin/terraform
                         rm terraform.zip
                     fi
                     .terraform-bin/terraform version
