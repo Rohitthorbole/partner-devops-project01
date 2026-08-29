@@ -14,38 +14,59 @@ pipeline {
             }
         }
 
+        stage('Install Terraform') {
+            steps {
+                echo 'Installing Terraform...'
+                sh '''
+                    set -eu
+                    mkdir -p .terraform-bin
+                    if [ ! -x .terraform-bin/terraform ]; then
+                        case "$(uname -m)" in
+                            x86_64) terraform_arch='amd64' ;;
+                            aarch64) terraform_arch='arm64' ;;
+                            *) echo "Unsupported architecture: $(uname -m)" >&2 ; exit 1 ;;
+                        esac
+                        curl -fsSLo terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_${terraform_arch}.zip"
+                        unzip -oq terraform.zip -d .terraform-bin
+                        rm terraform.zip
+                    fi
+                    .terraform-bin/terraform version
+                '''
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 echo 'Initializing Terraform...'
-                sh 'terraform init'
+                sh './.terraform-bin/terraform -chdir=terraform init'
             }
         }
 
         stage('Terraform Format') {
             steps {
                 echo 'Formating Terraform...'
-                sh 'terraform fmt'
+                sh './.terraform-bin/terraform -chdir=terraform fmt'
             }
         }
 
         stage('Terraform Validate') {
             steps {
                 echo 'Validating Terraform...'
-                sh 'terraform validate'
+                sh './.terraform-bin/terraform -chdir=terraform validate'
             }
         }
 
         stage('Terraform Plan') {
             steps {
                 echo 'Planning Terraform...'
-                sh 'terraform plan'
+                sh './.terraform-bin/terraform -chdir=terraform plan'
             }
         }
 
         stage('Apply') {
             steps {
                 echo 'Provisioning infrastructure with Terraform...'
-                sh 'terraform apply'
+                sh './.terraform-bin/terraform -chdir=terraform apply'
             }
         }
 
@@ -54,6 +75,10 @@ pipeline {
                 echo 'Deploying application to EC2...'
             }
         }
+    }
+
+    environment {
+        TERRAFORM_VERSION = '1.5.7'
     }
 
     post {
